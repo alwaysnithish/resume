@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign In{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+{% endblock %}
+
+{% block body %}
+<div class="auth-root">
+
+  <!-- ── LEFT: Brand Panel ───────────────────────────── -->
+  <div class="auth-brand">
+    <div class="auth-brand-inner">
+
+      <div class="brand-logo">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14 7L21 11V17L14 21L7 17V11L14 7Z" fill="white" opacity="0.25"/>
+            <circle cx="14" cy="14" r="3" fill="white"/>
+          </svg>
+        </div>
+        <span class="brand-name">QuantumCV</span>
+      </div>
+
+      <div class="brand-headline">
+        Build resumes that get you <span class="brand-highlight">hired.</span>
+      </div>
+      <p class="brand-sub">
+        AI-powered resume architecture — optimised for ATS systems, recruiters,
+        and every role you want. Free, no card required.
+      </p>
+
+      <div class="brand-features">
+        <div class="brand-feature">
+          <div class="brand-feature-icon">✦</div>
+          <div>
+            <div class="brand-feature-title">Gemini AI Engine</div>
+            <div class="brand-feature-desc">STAR bullets, smart section ordering, ATS keyword alignment</div>
+          </div>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">◈</div>
+          <div>
+            <div class="brand-feature-title">Global ATS Optimised</div>
+            <div class="brand-feature-desc">Naukri, LinkedIn, Workday, Greenhouse and 20+ job boards</div>
+          </div>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">⊞</div>
+          <div>
+            <div class="brand-feature-title">10 Professional Templates</div>
+            <div class="brand-feature-desc">Drag, edit, reorder — every element is fully customisable</div>
+          </div>
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feature-icon">⟳</div>
+          <div>
+            <div class="brand-feature-title">Undo / Redo + Version History</div>
+            <div class="brand-feature-desc">Never lose a change — restore any previous version instantly</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="brand-stats">
+        <div class="brand-stat">
+          <span class="brand-stat-n">2.4K+</span>
+          <span class="brand-stat-l">Resumes Built</span>
+        </div>
+        <div class="brand-stat-div"></div>
+        <div class="brand-stat">
+          <span class="brand-stat-n">91%</span>
+          <span class="brand-stat-l">Avg ATS Score</span>
+        </div>
+        <div class="brand-stat-div"></div>
+        <div class="brand-stat">
+          <span class="brand-stat-n">Free</span>
+          <span class="brand-stat-l">No Card Needed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Auth Panel ───────────────────────────── -->
+  <div class="auth-panel">
+    <div class="auth-panel-top">
+      <button class="theme-toggle" onclick="window.QTheme.toggle()" title="Toggle theme" aria-label="Toggle theme">
+        <span class="theme-icon-light">☀</span>
+        <span class="theme-icon-dark" style="display:none">☾</span>
+      </button>
+    </div>
+
+    <div class="auth-form-wrap">
+
+      <!-- STEP 1: Email -->
+      <div id="step-email" class="auth-step active">
+        <div class="auth-form-header">
+          <h1>Welcome to QuantumCV</h1>
+          <p>Sign in or create your free account to start building.</p>
+        </div>
+
+        {% if google_client_id %}
+        <div class="google-signin-wrap">
+          <div id="google-signin-btn"></div>
+          <div class="auth-divider"><span>or continue with email</span></div>
+        </div>
+        {% endif %}
+
+        <div class="auth-field">
+          <label for="email-input">Email address</label>
+          <input type="email" id="email-input" class="auth-input"
+            placeholder="you@example.com" autocomplete="email" inputmode="email" />
+          <div id="email-error" class="auth-error"></div>
+        </div>
+
+        <button id="send-otp-btn" class="auth-btn" onclick="sendOTP()">
+          <span class="spinner" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:none"></span>
+          <span class="btn-text">Continue with Email →</span>
+        </button>
+
+        <p class="auth-terms">
+          By continuing, you agree to our
+          <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+        </p>
+      </div>
+
+      <!-- STEP 2: OTP Verify -->
+      <div id="step-otp" class="auth-step">
+        <div class="auth-form-header">
+          <h1>Check your inbox</h1>
+          <p>Enter the 6-digit code sent to <strong id="email-display"></strong></p>
+        </div>
+
+        <div class="otp-info">
+          Didn't get it? Check your spam folder or <strong>wait 30 seconds</strong> before resending.
+        </div>
+
+        <div class="otp-digits">
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 1" />
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 2" />
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 3" />
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 4" />
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 5" />
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 6" />
+        </div>
+
+        <div id="otp-error" class="auth-error" style="margin-bottom:8px"></div>
+
+        <div class="otp-resend">
+          <span style="font-size:0.8rem;color:var(--text3)">Resend in <span id="resend-timer">60</span>s</span>
+          <button id="resend-btn" class="resend-btn" onclick="resendOTP()" disabled>Resend code</button>
+        </div>
+
+        <div class="auth-field">
+          <label for="name-input">Your name <span style="color:var(--text4);font-weight:400">(optional, for new accounts)</span></label>
+          <input type="text" id="name-input" class="auth-input" placeholder="Full name" autocomplete="name" />
+        </div>
+
+        <button id="verify-btn" class="auth-btn" onclick="verifyOTP()">
+          <span class="spinner" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:none"></span>
+          <span class="btn-text">Verify & Sign In</span>
+        </button>
+
+        <button class="back-link" onclick="goBack()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Use a different email
+        </button>
+      </div>
+
+    </div><!-- /auth-form-wrap -->
+  </div><!-- /auth-panel -->
+
+</div><!-- /auth-root -->
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-btn.loading .spinner { display: inline-block !important; }
+.auth-btn.loading .btn-text { opacity: 0.4; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+
+{% if google_client_id %}
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+window.addEventListener('load', () => {
+  if (typeof google === 'undefined') return;
+  google.accounts.id.initialize({
+  client_id: '{{ google_client_id }}',
+  ux_mode: 'popup',             // Explicitly set popup
+  context: 'signin',
+    callback: (resp) => {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/google-callback/';
+     // Inside your google.accounts.id.initialize callback:
+const csrfInput = document.createElement('input');
+csrfInput.type  = 'hidden';
+csrfInput.name  = 'csrfmiddlewaretoken';
+// Use the standard Django way to get the token from the DOM
+csrfInput.value = '{{ csrf_token }}'; 
+
+      const credInput = document.createElement('input');
+      credInput.type  = 'hidden';
+      credInput.name  = 'credential';
+      credInput.value = resp.credential;
+      form.appendChild(csrfInput);
+      form.appendChild(credInput);
+      document.body.appendChild(form);
+      form.submit();
+    },
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn'),
+    { theme:'outline', size:'large', width:'100%', text:'continue_with' }
+  );
+});
+</script>
+{% endif %}
+{% endblock %}

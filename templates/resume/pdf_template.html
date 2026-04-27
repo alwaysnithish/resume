@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>{{ data.name }} — Resume</title>
+</head>
+<body>
+
+<div class="resume-header">
+  <div class="resume-name">{{ data.name }}</div>
+  {% if data.target_role %}
+  <div class="resume-role">{{ data.target_role }}</div>
+  {% endif %}
+  <div class="resume-contact">
+    {% if data.email %}<span class="contact-item">{{ data.email }}</span>{% endif %}
+    {% if data.phone %}<span class="contact-item">{{ data.phone }}</span>{% endif %}
+    {% if data.linkedin %}<span class="contact-item">{{ data.linkedin }}</span>{% endif %}
+    {% if data.github %}<span class="contact-item">{{ data.github }}</span>{% endif %}
+    {% if data.location %}<span class="contact-item">{{ data.location }}</span>{% endif %}
+  </div>
+</div>
+
+{% for sec in data.sections %}
+{% if sec.type != 'divider' %}
+<div class="section">
+  <div class="section-title">{{ sec.title }}</div>
+
+  {% if sec.type == 'summary' or sec.type == 'objective' or sec.type == 'custom-text' %}
+    {% if sec.summary_text %}
+    <p class="summary-text">{{ sec.summary_text }}</p>
+    {% endif %}
+
+  {% elif sec.type == 'skills' %}
+    {% if sec.skill_groups %}
+    <div class="skill-groups">
+      {% for g in sec.skill_groups %}
+      <div class="skill-group">
+        <span class="skill-category">{{ g.category }}:</span>
+        <span class="skill-list">{{ g.skills|join:", " }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% elif sec.type == 'skills-bars' %}
+    {% if sec.skills %}
+    <div class="skills-bars">
+      {% for s in sec.skills %}
+      <div class="skill-bar-item">
+        <div class="skill-bar-header">
+          <span class="skill-bar-name">{{ s.name }}</span>
+          <span class="skill-bar-pct">{{ s.level }}%</span>
+        </div>
+        <div class="skill-bar-track">
+          <div class="skill-bar-fill" style="width:{{ s.level }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% elif sec.type == 'skills-dots' %}
+    {% if sec.skills %}
+    <div class="skills-dots">
+      {% for s in sec.skills %}
+      <div class="skill-dot-item">
+        <span class="skill-dot-name">{{ s.name }}</span>
+        <span class="skill-dots-row">
+          {% for i in "12345" %}
+          <span class="dot {% if forloop.counter <= s.level %}dot-filled{% endif %}"></span>
+          {% endfor %}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% elif sec.type == 'skills-tags' %}
+    {% if sec.tags %}
+    <div class="skill-tags">
+      {% for tag in sec.tags %}
+      <span class="skill-tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% elif sec.type == 'languages' %}
+    {% if sec.entries %}
+    <div class="languages">
+      {% for en in sec.entries %}
+      <div class="language-item">
+        <span class="language-name">{{ en.title }}</span>
+        <span class="language-level">{{ en.subtitle }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% elif sec.type == 'table' %}
+    {% if sec.tableData %}
+    <table class="resume-table">
+      {% for row in sec.tableData.rows %}
+      <tr>
+        {% for cell in row %}
+        <td {% if forloop.parentloop.first and sec.tableData.hasHeader %}class="table-header"{% endif %}>{{ cell }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+  {% else %}
+    {% if sec.entries %}
+    {% for entry in sec.entries %}
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-title">{{ entry.title }}</span>
+        {% if entry.date_start or entry.date_end %}
+        <span class="entry-date">
+          {{ entry.date_start }}{% if entry.date_end %} – {{ entry.date_end }}{% endif %}
+        </span>
+        {% endif %}
+      </div>
+      {% if entry.subtitle %}
+      <div class="entry-subtitle">{{ entry.subtitle }}</div>
+      {% endif %}
+      {% if entry.location %}
+      <div class="entry-location">{{ entry.location }}</div>
+      {% endif %}
+      {% if entry.bullets %}
+      <ul class="bullets">
+        {% for b in entry.bullets %}
+        <li>{{ b }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+  {% endif %}
+
+</div>
+{% endif %}
+{% endfor %}
+
+<div class="watermark">QuantumCV · AI-Powered Resume Architect</div>
+
+</body>
+</html>

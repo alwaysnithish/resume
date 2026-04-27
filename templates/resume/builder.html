@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if resume %}Edit Resume{% else %}New Resume{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/builder.css' %}" />
+{% endblock %}
+
+{% block body %}
+
+<!-- Pass server data to JS -->
+<script>
+  window.RESUME_ID   = "{{ resume.id|default:'' }}";
+  window.RESUME_DATA = {{ resume_json|safe }};
+</script>
+
+<div class="builder-shell" id="builder-shell">
+
+  <!-- ── Mobile Topbar ───────────────────────────────── -->
+  <div class="mobile-topbar" id="mobile-topbar">
+    <a href="{% url 'resume:dashboard' %}" class="mobile-logo">
+      <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+        <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="14" cy="14" r="3" fill="white"/>
+      </svg>
+      <span>QuantumCV</span>
+    </a>
+    <div class="mobile-actions">
+      <button id="mobile-generate-btn" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25)" onclick="generateResume()">
+        ✦ Generate
+      </button>
+      <button class="btn btn-icon" style="background:rgba(255,255,255,0.1);color:white" onclick="toggleMobilePanel()">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+          <path d="M3 5h12M3 9h12M3 13h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Left: Input Panel ───────────────────────────── -->
+  <div class="input-panel" id="input-panel">
+
+    <div class="panel-header">
+      <a href="{% url 'resume:dashboard' %}" class="panel-logo">
+        <div class="panel-logo-icon">
+          <svg width="14" height="14" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="14" cy="14" r="3" fill="white"/>
+          </svg>
+        </div>
+        <span class="panel-logo-text">QuantumCV</span>
+      </a>
+      <div class="panel-header-actions">
+        <button class="theme-toggle" onclick="window.QTheme.toggle()" title="Toggle theme">
+          <span class="theme-icon-light">☀</span>
+          <span class="theme-icon-dark" style="display:none">☾</span>
+        </button>
+        <a href="{% url 'resume:dashboard' %}" class="btn btn-ghost btn-sm">← Back</a>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="generate" onclick="switchPanelTab('generate')">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1l1.8 5H15l-4.2 3 1.6 5L8 11l-4.4 3 1.6-5L1 6h5.2z" fill="currentColor"/>
+        </svg>
+        AI Generate
+      </button>
+      <button class="panel-tab" data-tab="elements" onclick="switchPanelTab('elements')">
+        <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+          <path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Elements
+      </button>
+      <button class="panel-tab" data-tab="style" onclick="switchPanelTab('style')">
+        <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="7" cy="7" r="2" fill="currentColor"/>
+        </svg>
+        Style
+      </button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- ── AI GENERATE TAB ─────────────────────────── -->
+      <div class="tab-panel active" id="tab-generate">
+
+        <div>
+          <div class="input-label">
+            Career Data
+            <span class="input-label-hint">paste everything — AI will structure it</span>
+          </div>
+          <textarea id="raw-data" class="form-textarea" style="min-height:150px;font-size:0.83rem;"
+            placeholder="Paste your education, work experience, projects, skills, achievements, GitHub links…&#10;&#10;The more you provide, the better the result."
+            oninput="updateCharCount(this,'raw-count')"
+          >{% if resume %}{{ resume.raw_data }}{% endif %}</textarea>
+          <div class="char-count"><span id="raw-count">0</span> chars</div>
+        </div>
+
+        <div>
+          <div class="input-label">
+            Job Description
+            <span class="input-label-hint">optional — boosts ATS match</span>
+          </div>
+          <textarea id="job-desc" class="form-textarea" style="min-height:72px;font-size:0.83rem;"
+            placeholder="Paste the job description to align keywords and maximise your ATS score."
+            oninput="updateCharCount(this,'jd-count')"
+          >{% if resume %}{{ resume.job_description }}{% endif %}</textarea>
+          <div class="char-count"><span id="jd-count">0</span> chars</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div class="input-label">Country</div>
+            <select id="sel-country" class="form-select" style="font-size:0.83rem">
+              <option value="India"          {% if not resume or resume.country == 'India' %}selected{% endif %}>🇮🇳 India</option>
+              <option value="United States"  {% if resume.country == 'United States' %}selected{% endif %}>🇺🇸 United States</option>
+              <option value="United Kingdom" {% if resume.country == 'United Kingdom' %}selected{% endif %}>🇬🇧 United Kingdom</option>
+              <option value="UAE"            {% if resume.country == 'UAE' %}selected{% endif %}>🇦🇪 UAE</option>
+              <option value="Canada"         {% if resume.country == 'Canada' %}selected{% endif %}>🇨🇦 Canada</option>
+              <option value="Germany"        {% if resume.country == 'Germany' %}selected{% endif %}>🇩🇪 Germany</option>
+              <option value="Australia"      {% if resume.country == 'Australia' %}selected{% endif %}>🇦🇺 Australia</option>
+              <option value="Singapore"      {% if resume.country == 'Singapore' %}selected{% endif %}>🇸🇬 Singapore</option>
+            </select>
+          </div>
+          <div>
+            <div class="input-label">Target Role</div>
+            <select id="sel-role" class="form-select" style="font-size:0.83rem">
+              <option value="Fresher Software Engineer">Fresher SWE</option>
+              <option value="Backend Developer">Backend Dev</option>
+              <option value="Frontend Developer">Frontend Dev</option>
+              <option value="Full Stack Developer">Full Stack</option>
+              <option value="Data Scientist">Data Scientist</option>
+              <option value="ML Engineer">ML Engineer</option>
+              <option value="DevOps Engineer">DevOps</option>
+              <option value="Mobile Developer">Mobile Dev</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="Business Analyst">Business Analyst</option>
+              <option value="UX Designer">UX Designer</option>
+              <option value="Data Analyst">Data Analyst</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Photo toggle -->
+        <div class="photo-option">
+          <label class="form-label" style="margin:0;flex:1;cursor:pointer;font-size:0.8rem" for="photo-toggle">
+            📷 Include Profile Photo
+            <span style="display:block;font-size:0.71rem;font-weight:400;color:var(--text4)">UAE, Germany, Singapore — recommended</span>
+          </label>
+          <input type="checkbox" id="photo-toggle" onchange="onPhotoToggle(this.checked)"
+            style="width:18px;height:18px;accent-color:var(--blue);cursor:pointer;flex-shrink:0">
+          <input type="file" id="photo-file-input" accept="image/*" style="display:none"
+            onchange="handlePhotoUpload(this)">
+        </div>
+
+        <!-- Generation progress -->
+        <div class="gen-progress" id="gen-progress">
+          <svg class="progress-spinner" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="14" fill="none" stroke="var(--blue-border)" stroke-width="2"/>
+            <circle cx="18" cy="18" r="14" fill="none" stroke="var(--blue)" stroke-width="2"
+              stroke-dasharray="60 28" stroke-linecap="round" transform="rotate(-90 18 18)"/>
+          </svg>
+          <div class="progress-steps">
+            <div class="progress-step"><div class="progress-dot"></div>Parsing career data</div>
+            <div class="progress-step"><div class="progress-dot"></div>Analysing job description</div>
+            <div class="progress-step"><div class="progress-dot"></div>Building section structure</div>
+            <div class="progress-step"><div class="progress-dot"></div>Crafting bullet points</div>
+            <div class="progress-step"><div class="progress-dot"></div>ATS optimisation</div>
+            <div class="progress-step"><div class="progress-dot"></div>Streaming to preview…</div>
+          </div>
+        </div>
+
+        <!-- Generate button -->
+        <button id="generate-btn" class="btn btn-primary" onclick="generateResume()"
+          style="width:100%;padding:12px;font-size:0.9rem;font-weight:700">
+          <span class="spinner"></span>
+          <span class="btn-text">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="display:inline;vertical-align:-2px;margin-right:4px">
+              <path d="M8 1l1.8 5H15l-4.2 3 1.6 5L8 11l-4.4 3 1.6-5L1 6h5.2z" fill="white"/>
+            </svg>
+            Generate with Gemini AI
+          </span>
+        </button>
+
+        <button class="btn btn-secondary" style="width:100%;font-size:0.83rem" onclick="startFromTemplate()">
+          Start from Blank Template
+        </button>
+
+      </div><!-- /tab-generate -->
+
+      <!-- ── ELEMENTS TAB ────────────────────────────── -->
+      <div class="tab-panel" id="tab-elements">
+
+        <div>
+          <div class="input-label" style="margin-bottom:8px">Add Section</div>
+          <div class="section-grid">
+            <button class="sec-add-btn" onclick="addSection('summary')">📝 Summary</button>
+            <button class="sec-add-btn" onclick="addSection('objective')">🎯 Objective</button>
+            <button class="sec-add-btn" onclick="addSection('experience')">💼 Experience</button>
+            <button class="sec-add-btn" onclick="addSection('education')">🎓 Education</button>
+            <button class="sec-add-btn" onclick="addSection('projects')">🚀 Projects</button>
+            <button class="sec-add-btn" onclick="addSection('skills')">⚡ Skills</button>
+            <button class="sec-add-btn" onclick="addSection('skills-bars')">📊 Skill Bars</button>
+            <button class="sec-add-btn" onclick="addSection('skills-tags')">🏷 Skill Tags</button>
+            <button class="sec-add-btn" onclick="addSection('skills-dots')">● Skill Dots</button>
+            <button class="sec-add-btn" onclick="addSection('certifications')">🏆 Certs</button>
+            <button class="sec-add-btn" onclick="addSection('languages')">🌐 Languages</button>
+            <button class="sec-add-btn" onclick="addSection('achievements')">⭐ Awards</button>
+            <button class="sec-add-btn" onclick="addSection('hobbies')">🎨 Hobbies</button>
+            <button class="sec-add-btn" onclick="addSection('volunteer')">🤝 Volunteer</button>
+            <button class="sec-add-btn" onclick="addSection('references')">📋 References</button>
+            <button class="sec-add-btn" onclick="addSection('table')">⊞ Table</button>
+          </div>
+        </div>
+
+        <div style="border-top:1.5px solid var(--border);padding-top:12px">
+          <div class="input-label" style="margin-bottom:6px">Add Divider</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="sec-add-btn" onclick="addDivider('solid')">— Solid</button>
+            <button class="sec-add-btn" onclick="addDivider('dashed')">- - Dashed</button>
+            <button class="sec-add-btn" onclick="addDivider('none')">• Space</button>
+          </div>
+        </div>
+
+        <div style="border-top:1.5px solid var(--border);padding-top:12px">
+          <div class="input-label" style="margin-bottom:8px">Custom Section</div>
+          <input type="text" id="new-sec-title" class="form-input" placeholder="Section title" style="margin-bottom:8px" />
+          <div class="section-grid">
+            <button class="sec-add-btn" onclick="addCustomSection('text')">📄 Text</button>
+            <button class="sec-add-btn" onclick="addCustomSection('bullets')">• Bullets</button>
+            <button class="sec-add-btn" onclick="addCustomSection('table')">⊞ Table</button>
+          </div>
+        </div>
+
+      </div><!-- /tab-elements -->
+
+      <!-- ── STYLE TAB ───────────────────────────────── -->
+      <div class="tab-panel" id="tab-style">
+
+        <!-- Header fields -->
+        <div class="style-group">
+          <div class="style-group-label">Header Fields</div>
+          <div class="header-fields">
+            <input type="text" id="hdr-name"     class="form-input" placeholder="Full Name"   oninput="updateHeader()" />
+            <input type="text" id="hdr-role"     class="form-input" placeholder="Job Title"   oninput="updateHeader()" />
+            <div class="hdr-input-group">
+              <input type="text" id="hdr-email"  class="form-input" placeholder="Email"       oninput="updateHeader()" />
+              <input type="text" id="hdr-phone"  class="form-input" placeholder="Phone"       oninput="updateHeader()" />
+            </div>
+            <div class="hdr-input-group">
+              <input type="text" id="hdr-linkedin" class="form-input" placeholder="LinkedIn"  oninput="updateHeader()" />
+              <input type="text" id="hdr-github"   class="form-input" placeholder="GitHub"    oninput="updateHeader()" />
+            </div>
+            <input type="text" id="hdr-location" class="form-input" placeholder="Location"    oninput="updateHeader()" />
+          </div>
+        </div>
+
+        <!-- Accent colour -->
+        <div class="style-group">
+          <div class="style-group-label">Accent Colour</div>
+          <div class="color-swatches" id="style-swatches"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <input type="color" id="custom-color-input" value="#2058e8"
+              oninput="applyCustomColor(this.value)"
+              style="width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;padding:2px">
+            <span style="font-size:0.77rem;color:var(--text4);font-family:var(--font-mono)" id="style-hex-val">#2058e8</span>
+          </div>
+        </div>
+
+        <!-- Font family -->
+        <div class="style-group">
+          <div class="style-group-label">Font Family</div>
+          <div class="font-list" id="font-list"></div>
+        </div>
+
+        <!-- Font size -->
+        <div class="style-group">
+          <div class="style-group-label">Font Size</div>
+          <div class="size-btns">
+            <button class="size-btn" onclick="setFontScale(0.88, this)">S</button>
+            <button class="size-btn active" onclick="setFontScale(1, this)">M</button>
+            <button class="size-btn" onclick="setFontScale(1.08, this)">L</button>
+          </div>
+        </div>
+
+        <!-- Templates -->
+        <div class="style-group">
+          <div class="style-group-label">Layout Template</div>
+          <button class="btn btn-secondary btn-sm w-full" onclick="toggleTemplatePanel()">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+            Browse Templates
+          </button>
+        </div>
+
+      </div><!-- /tab-style -->
+
+    </div><!-- /panel-body -->
+  </div><!-- /input-panel -->
+
+  <!-- ── Right: Preview Area ─────────────────────────── -->
+  <div class="preview-area">
+
+    <!-- Toolbar -->
+    <div class="preview-toolbar">
+      <div class="toolbar-left">
+        <div>
+          <div class="toolbar-title" id="toolbar-title">
+            {% if resume %}{{ resume.title }}{% else %}New Resume{% endif %}
+          </div>
+          <div id="save-status" style="display:flex;align-items:center;gap:5px;margin-top:1px">
+            <div id="save-status-dot" class="save-dot"></div>
+            <span id="save-status-text" class="save-status" style="font-size:0.69rem;color:var(--text4);font-family:var(--font-mono)">Auto-save on</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- ATS / AI score chips -->
+        <div id="score-chips" style="display:none;align-items:center;gap:6px">
+          <div class="ats-pill" id="ats-chip" title="ATS Score">
+            <span style="color:var(--green);font-size:0.68rem">▲</span>
+            <span id="ats-score-val">0</span>%
+          </div>
+        </div>
+
+        <!-- Undo / Redo -->
+        <button id="undo-btn" class="btn btn-icon btn-ghost" onclick="undo()" title="Undo (⌘Z)" disabled>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M4 7H11M4 7L7 4M4 7L7 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button id="redo-btn" class="btn btn-icon btn-ghost" onclick="redo()" title="Redo (⌘⇧Z)" disabled>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M11 7H4M11 7L8 4M11 7L8 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <button id="version-btn" class="btn btn-ghost btn-sm" onclick="showVersionHistory()" style="display:none">
+          History
+        </button>
+
+        <!-- Save -->
+        <button id="save-btn" class="btn btn-secondary btn-sm" onclick="saveResume(false)" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M2 2h8l2 2v8a1 1 0 01-1 1H3a1 1 0 01-1-1V2z" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M4 2v3h5V2M4 8h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Save
+        </button>
+
+        <!-- Export PDF -->
+        <a id="export-btn" href="#" onclick="return handleExport(event)"
+          class="btn btn-primary btn-sm" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M7 2v7M4 6l3 3 3-3M2 12h10" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Export PDF
+        </a>
+
+        <!-- AI Chat toggle -->
+        <button class="btn btn-icon" onclick="toggleChat()"
+          title="AI Chat Editor"
+          style="background:var(--blue);color:white;border:none">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1l1.8 5H15l-4.2 3 1.6 5L8 11l-4.4 3 1.6-5L1 6h5.2z" fill="white"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Paper container -->
+    <div class="paper-container" id="paper-container">
+
+      <!-- Blank slate -->
+      <div class="blank-slate" id="preview-empty">
+        <div class="blank-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <path d="M8 6h14l6 6v18H8V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M22 6v6h6M13 16h10M13 20h8M13 24h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="blank-title">Your resume will appear here</div>
+        <p class="blank-sub">
+          Paste your career data in the panel, choose your country and role,
+          then hit <strong>Generate</strong> — or start from a blank template.
+        </p>
+        <button class="btn btn-primary" onclick="generateResume()">
+          ✦ Generate with AI
+        </button>
+      </div>
+
+      <!-- Resume paper -->
+      <div id="resume-paper-wrap" style="display:none;padding-bottom:40px">
+        <div id="resume-paper">
+          <div id="rp-content"></div>
+        </div>
+      </div>
+
+    </div><!-- /paper-container -->
+
+  </div><!-- /preview-area -->
+
+  <!-- ── Template Panel ──────────────────────────────── -->
+  <div class="tpl-panel" id="tpl-panel">
+    <div class="tpl-panel-header">
+      <span>Choose Template</span>
+      <button class="btn btn-icon btn-ghost btn-sm" onclick="toggleTemplatePanel()">✕</button>
+    </div>
+    <div class="tpl-scroll" id="tpl-scroll"></div>
+  </div>
+
+  <!-- ── AI Chat Panel ───────────────────────────────── -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-title">
+        <div class="chat-ai-dot"></div>
+        AI Chat Editor
+      </div>
+      <button class="btn btn-icon btn-ghost btn-sm" onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-messages" id="chat-msgs">
+      <div class="chat-msg chat-msg-ai">
+        Hi! I can edit your resume. Try: <em>"Make the summary more concise"</em>, <em>"Add a DevOps skills section"</em>, or <em>"Rewrite bullets with stronger verbs"</em>.
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <textarea id="chat-input" class="chat-input" rows="1"
+        placeholder="Ask me to edit your resume…"
+        style="resize:none;line-height:1.5"></textarea>
+      <button id="chat-send-btn" class="btn btn-primary btn-sm" onclick="sendChat()" style="flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M12 7H2M12 7l-4-4M12 7l-4 4" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Version History Modal ───────────────────────── -->
+  <div id="version-modal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center">
+    <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-lg);width:420px;max-height:480px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1.5px solid var(--border)">
+        <span style="font-family:var(--font-display);font-weight:700;font-size:0.95rem">Version History</span>
+        <button class="btn btn-icon btn-ghost btn-sm" onclick="closeModal('version-modal')">✕</button>
+      </div>
+      <div id="version-list" style="overflow-y:auto;flex:1"></div>
+    </div>
+  </div>
+
+</div><!-- /builder-shell -->
+
+<style>
+/* Version list items */
+.version-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; border-bottom: 1.5px solid var(--border);
+  gap: 12px;
+}
+.version-label { font-size: 0.875rem; font-weight: 600; }
+.version-date  { font-size: 0.75rem; color: var(--text4); margin-top: 2px; font-family: var(--font-mono); }
+
+/* Save status dot */
+.save-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text4); flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+.save-dot.saved { background: var(--green); }
+.save-dot.error { background: var(--red); }
+
+/* Chat typing dots */
+@keyframes typing { 0%,100% { opacity:.3; transform:translateY(0); } 50% { opacity:1; transform:translateY(-3px); } }
+.typing-dot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--text4); margin: 0 2px;
+  animation: typing 1.2s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Section flash after AI edit */
+@keyframes flash { 0%,100% { background:transparent; } 30% { background:var(--blue-bg); } }
+.flash { animation: flash 1.2s ease; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/templates.js' %}"></script>
+<script src="{% static 'js/builder.js' %}"></script>
+<script>
+// Init template gallery after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  renderTemplateGallery();
+});
+</script>
+{% endblock %}

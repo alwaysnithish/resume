@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Verify Code{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+{% endblock %}
+
+{% block body %}
+<div class="auth-root">
+  <!-- Brand Panel (hidden on mobile) -->
+  <div class="auth-brand" style="display:none">
+    <div class="auth-brand-inner">
+      <div class="brand-logo">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="14" cy="14" r="3" fill="white"/>
+          </svg>
+        </div>
+        <span class="brand-name">QuantumCV</span>
+      </div>
+      <div class="brand-headline">Verify your email.</div>
+    </div>
+  </div>
+
+  <!-- Auth Panel -->
+  <div class="auth-panel">
+    <div class="auth-panel-top">
+      <button class="theme-toggle" onclick="window.QTheme.toggle()" title="Toggle theme">
+        <span class="theme-icon-light">☀</span>
+        <span class="theme-icon-dark" style="display:none">☾</span>
+      </button>
+    </div>
+
+    <div class="auth-form-wrap">
+      <div class="auth-form-header">
+        <h1>Verify Your Code</h1>
+        <p>Enter the 6-digit code sent to <strong id="email-display">{{ email }}</strong></p>
+      </div>
+
+      <div class="otp-info">
+        Didn't get it? Check your spam folder or wait 30 seconds before resending.
+      </div>
+
+      <div class="otp-digits">
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 1" />
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 2" />
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 3" />
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 4" />
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 5" />
+        <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" aria-label="Digit 6" />
+      </div>
+
+      <div id="otp-error" class="auth-error" style="margin-bottom:8px"></div>
+
+      <div class="otp-resend">
+        <span style="font-size:0.8rem;color:var(--text3)">Resend in <span id="resend-timer">60</span>s</span>
+        <button id="resend-btn" class="resend-btn" onclick="resendOTP()" disabled>Resend code</button>
+      </div>
+
+      <button id="verify-btn" class="auth-btn" onclick="verifyOTP()">
+        <span class="spinner"></span>
+        <span class="btn-text">Verify & Sign In</span>
+      </button>
+
+      <button class="back-link" onclick="window.history.back()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M8.5 2.5L4 7l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Use a different email
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.auth-btn.loading .spinner {
+  display: inline-block !important;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.auth-btn.loading .btn-text { opacity: 0.4; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+<script>
+// Initialize OTP inputs and resend timer on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initOTPInputs();
+  startResendTimer(60);
+});
+</script>
+{% endblock %}

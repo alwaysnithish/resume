@@ -1,0 +1,268 @@
+/* QuantumCV — chat.css
+   Chat widget, template picker slideout, color row,
+   photo toggle, and AI edit flash animation.
+   These styles complement builder.css.
+================================================================ */
+
+/* ── TEMPLATE PICKER PANEL ──────────────────────────────────── */
+/* Overrides / supplements the .tpl-panel rules in builder.css  */
+.tpl-panel-inner {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tpl-group-lbl {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text4);
+  margin-bottom: 8px;
+}
+
+.tpl-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ATS badge overlaid on thumbnail */
+.tpl-ats-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  background: var(--blue);
+  color: white;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+#tpl-toggle-btn.active {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-color: var(--blue-border);
+}
+
+/* ── COLOR ROW (inline toolbar strip) ───────────────────────── */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.color-row-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text4);
+  white-space: nowrap;
+}
+
+/* color-swatches, color-swatch, color-swatch.active defined in base.css */
+
+.color-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+}
+
+.color-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--t) var(--ease);
+}
+.color-thumb:hover { transform: scale(1.2); }
+
+.color-hex-val {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  min-width: 52px;
+}
+
+/* ── CHAT WIDGET (floating FAB variant) ─────────────────────── */
+/* .chat-panel and .chat-* base rules live in builder.css.       */
+/* This file extends with the FAB and quick-reply styles.        */
+
+.chat-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(32, 88, 232, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  z-index: 300;
+  transition: all var(--t-slow) var(--ease);
+}
+.chat-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(32, 88, 232, 0.5);
+}
+.chat-fab.open {
+  background: var(--text4);
+}
+
+/* Chat header avatar */
+.chat-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: white;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.chat-hinfo { display: flex; align-items: center; gap: 10px; }
+.chat-hinfo h4 { font-size: 0.875rem; font-weight: 700; }
+.chat-hinfo p  { font-size: 0.71rem; color: var(--text4); }
+
+.chat-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* Message avatars */
+.chat-msg-av {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+}
+.chat-msg.user .chat-msg-av {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+/* Bubble styles */
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 14px;
+  border-top-left-radius: 4px;
+  font-size: 0.81rem;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  word-break: break-word;
+}
+.chat-msg.user .chat-bubble {
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 14px;
+}
+
+/* Quick reply chips */
+.chat-quick {
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.chat-qbtn {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+  font-family: var(--font);
+  font-weight: 500;
+}
+.chat-qbtn:hover {
+  background: var(--blue-bg);
+  border-color: var(--blue-border);
+  color: var(--blue);
+}
+
+/* ── PHOTO TOGGLE ────────────────────────────────────────────── */
+.photo-toggle-hint {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text4);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── AI EDIT FLASH ───────────────────────────────────────────── */
+@keyframes flash-edit {
+  0%   { outline: 2px solid rgba(32, 88, 232, 0.5); outline-offset: 2px; background: var(--blue-bg); }
+  100% { outline: 0px solid transparent; background: transparent; }
+}
+.flash {
+  animation: flash-edit 1.4s var(--ease-out) forwards;
+  border-radius: var(--r-xs);
+}
+
+/* ── SECTION ENHANCE HIGHLIGHT ──────────────────────────────── */
+@keyframes sec-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: 0 0 0 3px var(--blue-border); }
+}
+.sec-enhanced {
+  animation: sec-pulse 1s var(--ease) 2;
+}
+
+/* ── RESPONSIVE OVERRIDES ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .chat-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 46px;
+    height: 46px;
+  }
+
+  .chat-panel {
+    right: 12px;
+    bottom: 72px;
+    width: calc(100vw - 24px);
+  }
+
+  .color-row {
+    padding: 8px 14px;
+    gap: 7px;
+  }
+}
